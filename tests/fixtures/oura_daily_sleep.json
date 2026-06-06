@@ -1,0 +1,29 @@
+{
+  "id": "a1b2c3d4-sleep-0520",
+  "day": "2026-05-20",
+  "score": 82,
+  "timestamp": "2026-05-20T00:00:00+00:00",
+  "contributors": {
+    "deep_sleep": 78,
+    "efficiency": 90,
+    "latency": 85,
+    "rem_sleep": 74,
+    "restfulness": 80,
+    "timing": 88,
+    "total_sleep": 79
+  },
+  "total_sleep_duration": 27540,
+  "rem_sleep_duration": 6840,
+  "deep_sleep_duration": 5280,
+  "light_sleep_duration": 15420,
+  "awake_time": 2160,
+  "bedtime_start": "2026-05-19T23:08:00+00:00",
+  "bedtime_end": "2026-05-20T07:14:00+00:00",
+  "time_in_bed": 29700,
+  "efficiency": 93,
+  "restless_periods": 12,
+  "average_heart_rate": 54.3,
+  "lowest_heart_rate": 48,
+  "average_hrv": 42,
+  "latency": 480
+}

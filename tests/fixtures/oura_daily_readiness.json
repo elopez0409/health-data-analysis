@@ -1,0 +1,23 @@
+{
+  "id": "a1b2c3d4-readiness-0520",
+  "day": "2026-05-20",
+  "score": 78,
+  "timestamp": "2026-05-20T00:00:00+00:00",
+  "contributors": {
+    "activity_balance": 80,
+    "body_temperature": 72,
+    "hrv_balance": 76,
+    "previous_day_activity": 85,
+    "previous_night": 82,
+    "recovery_index": 90,
+    "resting_heart_rate": 88,
+    "sleep_balance": 74
+  },
+  "temperature_deviation": -0.14,
+  "temperature_trend_deviation": 0.02,
+  "hrv_balance": {
+    "baseline": 45,
+    "value": 42,
+    "status": "normal"
+  }
+}

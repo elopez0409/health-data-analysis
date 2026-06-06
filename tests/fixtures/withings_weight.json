@@ -1,0 +1,11 @@
+{
+  "grpid": 2963912345,
+  "attrib": 0,
+  "date": 1779262200,
+  "category": 1,
+  "measures": [
+    {"value": 78500, "type": 1, "unit": -3},
+    {"value": 1850, "type": 6, "unit": -2},
+    {"value": 35200, "type": 76, "unit": -3}
+  ]
+}

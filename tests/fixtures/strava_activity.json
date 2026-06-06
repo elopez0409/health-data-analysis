@@ -1,0 +1,23 @@
+{
+  "id": 12345678901,
+  "name": "Morning Run",
+  "type": "Run",
+  "sport_type": "TrailRun",
+  "start_date": "2026-05-20T07:30:00Z",
+  "start_date_local": "2026-05-20T00:30:00Z",
+  "elapsed_time": 3600,
+  "moving_time": 3450,
+  "distance": 10500.5,
+  "total_elevation_gain": 150.3,
+  "average_heartrate": 145.2,
+  "max_heartrate": 172.0,
+  "kilojoules": null,
+  "calories": 720.0,
+  "athlete": {
+    "id": 999
+  },
+  "map": {
+    "id": "a123",
+    "summary_polyline": "abc"
+  }
+}

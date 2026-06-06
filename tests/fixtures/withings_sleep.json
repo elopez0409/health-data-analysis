@@ -1,0 +1,15 @@
+{
+  "id": 1234567890,
+  "startdate": 1779232500,
+  "enddate": 1779260700,
+  "date": "2026-05-20",
+  "model": 32,
+  "model_id": 32,
+  "deepsleepduration": 5100,
+  "lightsleepduration": 12600,
+  "remsleepduration": 7800,
+  "wakeupduration": 2700,
+  "hr_average": 58,
+  "hr_min": 48,
+  "hr_max": 72
+}

@@ -1,0 +1,51 @@
+[project]
+name = "health-data-backend"
+version = "0.1.0"
+description = "Multi-provider health data unification backend"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.30.0",
+    "httpx>=0.27.0",
+    "authlib>=1.3.0",
+    "sqlalchemy[asyncio]>=2.0.30",
+    "asyncpg>=0.29.0",
+    "alembic>=1.13.0",
+    "polars>=1.0.0",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.3.0",
+    "structlog>=24.1.0",
+    "apscheduler>=3.10.0",
+    "typer>=0.12.0",
+    "rich>=13.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.0",
+    "respx>=0.21.0",
+    "ipykernel>=6.29.0",
+    "connectorx>=0.3.3",
+]
+analysis = [
+    "kagglehub>=0.3.0",
+    "pyarrow>=17.0.0",
+    "seaborn>=0.13.0",
+    "scipy>=1.14.0",
+    "matplotlib>=3.9.0",
+]
+
+[project.scripts]
+app-cli = "app.cli:cli_app"
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

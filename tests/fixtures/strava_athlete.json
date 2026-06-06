@@ -1,0 +1,9 @@
+{
+  "id": 999,
+  "username": "testrunner",
+  "firstname": "Test",
+  "lastname": "Runner",
+  "city": "San Francisco",
+  "country": "United States",
+  "premium": true
+}

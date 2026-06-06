@@ -1,0 +1,14 @@
+{
+  "activities": [
+    {
+      "activityId": 91827364550,
+      "activityType": "RUNNING",
+      "startTimeInSeconds": 1747734600,
+      "durationInSeconds": 2820,
+      "distanceInMeters": 7542.3,
+      "activeKilocalories": 485.0,
+      "averageHeartRateInBeatsPerMinute": 152.0,
+      "maxHeartRateInBeatsPerMinute": 178.0
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "sleeps": [
+    {
+      "startTimeInSeconds": 1747695600,
+      "durationInSeconds": 27900,
+      "deepSleepDurationInSeconds": 5400,
+      "lightSleepDurationInSeconds": 12600,
+      "remSleepDurationInSeconds": 7200,
+      "awakeDurationInSeconds": 2700
+    }
+  ]
+}

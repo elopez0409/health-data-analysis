@@ -1,0 +1,11 @@
+{
+  "user": {
+    "encodedId": "ABC123",
+    "displayName": "Test User",
+    "fullName": "Test User",
+    "age": 30,
+    "gender": "MALE",
+    "height": 180.0,
+    "weight": 75.0
+  }
+}
