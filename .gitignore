@@ -15,3 +15,5 @@ venv/
 *.sqlite3
 .ipynb_checkpoints/
 data/subset/
+data/raw/
+data/normalized/
