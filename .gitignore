@@ -20,3 +20,7 @@ data/normalized/
 data/hr_raw/
 data/hr_real/
 data/hr_out/
+
+# PhysioNet restricted-access data (download via scripts/fetch_bigideas_step.py).
+# Restricted Health Data License: must NOT be committed or shared.
+physionet.org/

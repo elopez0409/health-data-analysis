@@ -111,6 +111,29 @@ See `notebooks/` for starter analyses:
 - `02_cross_provider_agreement.ipynb` — Agreement between overlapping metrics
 - `03_signal_relationships.ipynb` — Sleep/HRV/recovery vs activity correlations
 
+## Datasets
+
+Raw research datasets are **not** committed to git (they're git-ignored). Download
+them locally with the helper scripts:
+
+```bash
+# Open-access wearable HR datasets (PPG-DaLiA, GalaxyPPG)
+python scripts/fetch_hr_datasets.py
+
+# BigIdeasLab_STEP smartwatch HR (PhysioNet, credentialed access)
+export PHYSIONET_USERNAME=yourname      # password is prompted (hidden) if unset
+python scripts/fetch_bigideas_step.py
+```
+
+`fetch_bigideas_step.py` places files under
+`physionet.org/files/bigideaslab-step-hr-smartwatch/1.0/`, where
+`hr_selection/config.py` expects them, and verifies SHA-256 checksums.
+
+> **Restricted data:** BigIdeasLab_STEP is published under the PhysioNet
+> Restricted Health Data License. You must hold a credentialed PhysioNet account
+> and sign the project's Data Use Agreement. **Never commit or share this data** —
+> the `physionet.org/` directory is git-ignored on purpose.
+
 ## Adding a New Provider
 
 1. Create `app/providers/<name>/` with `auth.py`, `client.py`, `models.py`, `normalizer.py`
