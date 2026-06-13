@@ -25,7 +25,11 @@ from rich.console import Console
 from rich.table import Table
 
 from hr_selection import config
-from hr_selection.personal.estimator import OffsetState, update_offset
+from hr_selection.personal.backtest import (
+    STRATEGIES,
+    aggregate_backtest_metrics,
+    walk_forward_backtest,
+)
 from hr_selection.synthetic.calibration import build_paired_nights
 
 console = Console()
@@ -44,91 +48,8 @@ def _load_paired(data_path: Path, truth_path: Path):
     return paired, truth
 
 
-def walk_forward_backtest(
-    paired,
-    *,
-    warmup: int = 7,
-    population_mean: float | None = None,
-) -> tuple[list[dict], dict]:
-    """Expanding-window walk-forward backtest per user."""
-    if population_mean is None:
-        population_mean = float(paired["delta"].mean())
-
-    all_nights: list[dict] = []
-
-    for user_id, grp in paired.groupby("user_id"):
-        grp = grp.sort_values("date").reset_index(drop=True)
-        state = OffsetState()
-
-        for t in range(len(grp)):
-            row = grp.iloc[t]
-            chest = float(row["chest"])
-            wrist = float(row["wrist"])
-            night = t + 1
-
-            # Predict using only history [0..t-1]
-            if t >= warmup:
-                offset_est = state.offset_mean if state.n_samples > 0 else population_mean
-                preds = {
-                    "uncorrected": wrist,
-                    "population_prior": wrist - population_mean,
-                    "personal": wrist - offset_est,
-                }
-                for strat, pred in preds.items():
-                    all_nights.append(
-                        {
-                            "user_id": user_id,
-                            "night": night,
-                            "date": str(row["date"].date()) if hasattr(row["date"], "date") else str(row["date"]),
-                            "strategy": strat,
-                            "predicted_hr": pred,
-                            "target_chest": chest,
-                            "error": abs(pred - chest),
-                            "in_sample": False,
-                        }
-                    )
-
-            # Update state with night t (for future predictions)
-            state = update_offset(state, float(row["delta"]))
-
-    return all_nights, {"population_mean": population_mean, "warmup": warmup}
-
-
 def _aggregate_metrics(nights: list[dict], holdout_start: int) -> dict:
-    import pandas as pd
-
-    df = pd.DataFrame(nights)
-    out: dict = {"strategies": {}, "holdout_start": holdout_start}
-
-    for strat in STRATEGIES:
-        sub = df[df["strategy"] == strat]
-        cum_mae = float(sub["error"].mean())
-        holdout = sub[sub["night"] >= holdout_start]
-        holdout_mae = float(holdout["error"].mean()) if len(holdout) else float("nan")
-
-        # Rolling 14-night MAE (last 14 OOS nights per user, then average)
-        rolling = []
-        for _, grp in sub.groupby("user_id"):
-            grp = grp.sort_values("night")
-            if len(grp) >= 14:
-                rolling.append(float(grp.tail(14)["error"].mean()))
-        rolling_mae = float(np.mean(rolling)) if rolling else float("nan")
-
-        out["strategies"][strat] = {
-            "cumulative_oos_mae": round(cum_mae, 4),
-            "holdout_mae": round(holdout_mae, 4),
-            "rolling_14night_mae": round(rolling_mae, 4),
-            "n_predictions": int(len(sub)),
-        }
-
-    uncorr = out["strategies"]["uncorrected"]["cumulative_oos_mae"]
-    personal = out["strategies"]["personal"]["cumulative_oos_mae"]
-    if uncorr > 0:
-        out["skill_pct_vs_uncorrected"] = round(100 * (uncorr - personal) / uncorr, 2)
-    else:
-        out["skill_pct_vs_uncorrected"] = 0.0
-
-    return out
+    return aggregate_backtest_metrics(nights, holdout_start=holdout_start)
 
 
 @app.command()

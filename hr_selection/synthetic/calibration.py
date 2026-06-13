@@ -20,7 +20,7 @@ import pandas as pd
 from hr_selection import config
 
 # --------------------------------------------------------------------------
-# Default generative parameters
+# Default generative parameters (HR preset)
 # --------------------------------------------------------------------------
 N_USERS = 20
 N_NIGHTS = 90
@@ -39,6 +39,49 @@ DEVICE_CHEST = "chest_strap"
 DEVICE_WRIST = "wrist"
 
 
+@dataclass(frozen=True)
+class MetricConfig:
+    """Generative parameters for a paired anchor-vs-wrist calibration metric."""
+
+    name: str
+    unit: str
+    baseline_mean: float
+    baseline_std: float
+    offset_mean: float
+    offset_std: float
+    night_var_std: float
+    anchor_noise_std: float
+    wrist_noise_std: float
+    decimal_places: int = 1
+
+
+HR_METRIC = MetricConfig(
+    name="heart_rate",
+    unit="bpm",
+    baseline_mean=TRUE_BASELINE_MEAN,
+    baseline_std=TRUE_BASELINE_STD,
+    offset_mean=PERSONAL_OFFSET_MEAN,
+    offset_std=PERSONAL_OFFSET_STD,
+    night_var_std=NIGHT_VAR_STD,
+    anchor_noise_std=CHEST_NOISE_STD,
+    wrist_noise_std=WRIST_NOISE_STD,
+    decimal_places=1,
+)
+
+HRV_METRIC = MetricConfig(
+    name="hrv_rmssd",
+    unit="ms",
+    baseline_mean=45.0,
+    baseline_std=12.0,
+    offset_mean=0.0,
+    offset_std=8.0,
+    night_var_std=4.0,
+    anchor_noise_std=2.0,
+    wrist_noise_std=6.0,
+    decimal_places=1,
+)
+
+
 @dataclass
 class CalibrationManifest:
     """Summary of a generated calibration dataset."""
@@ -52,6 +95,8 @@ class CalibrationManifest:
     population_offset_std: float
     seed: int
     start_date: str
+    metric_name: str
+    metric_unit: str
     paths: dict[str, str]
 
 
@@ -63,6 +108,7 @@ def generate_calibration_data(
     start_date: date = START_DATE,
     missing_rate: float = MISSING_RATE,
     seed: int | None = None,
+    metric: MetricConfig = HR_METRIC,
 ) -> tuple[pd.DataFrame, pd.DataFrame, CalibrationManifest]:
     """Generate long-format readings + per-user ground-truth sidecar.
 
@@ -85,24 +131,24 @@ def generate_calibration_data(
 
     for u in range(n_users):
         user_id = f"user_{u + 1:02d}"
-        true_baseline = float(rng.normal(TRUE_BASELINE_MEAN, TRUE_BASELINE_STD))
-        personal_offset = float(rng.normal(PERSONAL_OFFSET_MEAN, PERSONAL_OFFSET_STD))
+        true_baseline = float(rng.normal(metric.baseline_mean, metric.baseline_std))
+        personal_offset = float(rng.normal(metric.offset_mean, metric.offset_std))
 
         truth_rows.append(
             {
                 "user_id": user_id,
-                "true_baseline": round(true_baseline, 2),
-                "personal_offset": round(personal_offset, 2),
+                "true_baseline": round(true_baseline, metric.decimal_places),
+                "personal_offset": round(personal_offset, metric.decimal_places),
             }
         )
 
         for night in range(n_nights):
             day = start_date + timedelta(days=night)
             day_str = day.isoformat()
-            true_hr_night = true_baseline + float(rng.normal(0, NIGHT_VAR_STD))
+            true_night = true_baseline + float(rng.normal(0, metric.night_var_std))
 
-            chest_hr = true_hr_night + float(rng.normal(0, CHEST_NOISE_STD))
-            wrist_hr = true_hr_night + personal_offset + float(rng.normal(0, WRIST_NOISE_STD))
+            chest_val = true_night + float(rng.normal(0, metric.anchor_noise_std))
+            wrist_val = true_night + personal_offset + float(rng.normal(0, metric.wrist_noise_std))
 
             if rng.random() >= missing_rate:
                 reading_rows.append(
@@ -110,7 +156,7 @@ def generate_calibration_data(
                         "user_id": user_id,
                         "date": day_str,
                         "device_type": DEVICE_CHEST,
-                        "hr_reading": round(chest_hr, 1),
+                        "hr_reading": round(chest_val, metric.decimal_places),
                         "is_resting": True,
                     }
                 )
@@ -120,7 +166,7 @@ def generate_calibration_data(
                         "user_id": user_id,
                         "date": day_str,
                         "device_type": DEVICE_WRIST,
-                        "hr_reading": round(wrist_hr, 1),
+                        "hr_reading": round(wrist_val, metric.decimal_places),
                         "is_resting": True,
                     }
                 )
@@ -128,7 +174,6 @@ def generate_calibration_data(
     readings_df = pd.DataFrame(reading_rows)
     truth_df = pd.DataFrame(truth_rows)
 
-    # Observed population offset stats from paired nights
     paired = _build_paired_nights(readings_df)
     pop_mean = float(paired["delta"].mean()) if len(paired) else 0.0
     pop_std = float(paired["delta"].std()) if len(paired) else 0.0
@@ -144,6 +189,8 @@ def generate_calibration_data(
         population_offset_std=round(pop_std, 3),
         seed=seed,
         start_date=start_date.isoformat(),
+        metric_name=metric.name,
+        metric_unit=metric.unit,
         paths={},
     )
     return readings_df, truth_df, manifest
@@ -181,13 +228,14 @@ def write_calibration_dataset(
     seed: int | None = None,
     n_users: int = N_USERS,
     n_nights: int = N_NIGHTS,
+    metric: MetricConfig = HR_METRIC,
 ) -> CalibrationManifest:
     """Generate and write CSV + truth sidecar + data dictionary."""
     root = Path(out_dir) if out_dir is not None else config.DATA_DIR
     root.mkdir(parents=True, exist_ok=True)
 
     readings_df, truth_df, manifest = generate_calibration_data(
-        seed=seed, n_users=n_users, n_nights=n_nights
+        seed=seed, n_users=n_users, n_nights=n_nights, metric=metric
     )
 
     csv_path = root / "hr_calibration_dataset.csv"
@@ -196,7 +244,7 @@ def write_calibration_dataset(
 
     readings_df.to_csv(csv_path, index=False)
     truth_df.to_csv(truth_path, index=False)
-    dict_path.write_text(_data_dictionary_text(manifest))
+    dict_path.write_text(_data_dictionary_text(manifest, metric))
 
     manifest.paths = {
         "readings": str(csv_path),
@@ -206,10 +254,10 @@ def write_calibration_dataset(
     return manifest
 
 
-def _data_dictionary_text(manifest: CalibrationManifest) -> str:
+def _data_dictionary_text(manifest: CalibrationManifest, metric: MetricConfig) -> str:
     return f"""# HR Calibration Dataset — Data Dictionary
 
-Synthetic longitudinal resting heart rate readings for baseline training,
+Synthetic longitudinal resting {metric.name} readings for baseline training,
 personal offset convergence, and walk-forward backtesting.
 
 ## Files
@@ -227,7 +275,7 @@ personal offset convergence, and walk-forward backtesting.
 | `user_id` | string | Simulated user identifier (`user_01` … `user_{manifest.n_users:02d}`) |
 | `date` | date (ISO) | Night of measurement, consecutive from `{manifest.start_date}` |
 | `device_type` | string | `chest_strap` (trusted anchor) or `wrist` (device to calibrate) |
-| `hr_reading` | float | Resting heart rate in bpm |
+| `hr_reading` | float | Resting {metric.name} in {metric.unit} |
 | `is_resting` | bool | Always `True` (resting-state dataset) |
 
 Missing readings (~{manifest.missing_rate:.1%} per device) are omitted entirely.
@@ -237,32 +285,33 @@ Missing readings (~{manifest.missing_rate:.1%} per device) are omitted entirely.
 | Column | Type | Description |
 |--------|------|-------------|
 | `user_id` | string | Matches readings file |
-| `true_baseline` | float | User's stable resting HR baseline (bpm), drawn from N({TRUE_BASELINE_MEAN}, {TRUE_BASELINE_STD}) |
-| `personal_offset` | float | Wrist bias vs chest strap (bpm), drawn from N({PERSONAL_OFFSET_MEAN}, {PERSONAL_OFFSET_STD}) |
+| `true_baseline` | float | User's stable baseline ({metric.unit}), drawn from N({metric.baseline_mean}, {metric.baseline_std}) |
+| `personal_offset` | float | Wrist bias vs chest strap ({metric.unit}), drawn from N({metric.offset_mean}, {metric.offset_std}) |
 
 ## Generative model
 
 Per user:
-- `true_baseline ~ N({TRUE_BASELINE_MEAN}, {TRUE_BASELINE_STD})`
-- `personal_offset ~ N({PERSONAL_OFFSET_MEAN}, {PERSONAL_OFFSET_STD})`
+- `true_baseline ~ N({metric.baseline_mean}, {metric.baseline_std})`
+- `personal_offset ~ N({metric.offset_mean}, {metric.offset_std})`
 
 Per night:
-- `true_hr_night = true_baseline + N(0, {NIGHT_VAR_STD})`
-- `chest_strap = true_hr_night + N(0, {CHEST_NOISE_STD})`
-- `wrist = true_hr_night + personal_offset + N(0, {WRIST_NOISE_STD})`
+- `true_night = true_baseline + N(0, {metric.night_var_std})`
+- `chest_strap = true_night + N(0, {metric.anchor_noise_std})`
+- `wrist = true_night + personal_offset + N(0, {metric.wrist_noise_std})`
 - Each device independently missing with probability {MISSING_RATE:.0%}
 
 ## Dataset summary
 
 | Stat | Value |
 |------|-------|
+| Metric | {metric.name} ({metric.unit}) |
 | Users | {manifest.n_users} |
 | Nights per user | {manifest.n_nights} |
 | Total rows | {manifest.n_rows} |
 | Expected rows (no missing) | {manifest.n_expected} |
 | Observed missing rate | {manifest.missing_rate:.1%} |
-| Observed population offset mean | {manifest.population_offset_mean} bpm |
-| Observed population offset std | {manifest.population_offset_std} bpm |
+| Observed population offset mean | {manifest.population_offset_mean} {metric.unit} |
+| Observed population offset std | {manifest.population_offset_std} {metric.unit} |
 | Random seed | {manifest.seed} |
 
 ## Usage
