@@ -97,10 +97,29 @@ async def _pull_async(provider: str):
         console.print(f"[red]Pull not implemented for: {provider}[/red]")
 
 
+async def _personal_hr_async():
+    from app.jobs.personal_hr import personal_hr_job
+
+    summary = await personal_hr_job()
+    console.print(
+        f"[green]Personal HR: {summary['windows']} windows, "
+        f"{summary['sources_updated']} sources updated, "
+        f"{summary['anomalies']} anomalies[/green]"
+    )
+    if summary.get("trusted_source"):
+        console.print(f"  Trusted source: {summary['trusted_source']}")
+
+
 @cli_app.command("pull")
 def pull(provider: str = typer.Argument(..., help="Provider to pull from")):
     """Pull data from a specific provider."""
     asyncio.run(_pull_async(provider))
+
+
+@cli_app.command("personal-hr")
+def personal_hr():
+    """Run the personal HR living-model update (nightly job, manual trigger)."""
+    asyncio.run(_personal_hr_async())
 
 
 def _cli_entrypoint():

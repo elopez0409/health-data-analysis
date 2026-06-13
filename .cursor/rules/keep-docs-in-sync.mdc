@@ -1,0 +1,39 @@
+---
+description: Keep documentation in sync when system architecture or schema changes
+alwaysApply: true
+---
+
+# Keep Docs in Sync
+
+When you change code, update the matching documentation in the same change. If the doc does not exist yet, create it.
+
+## Schema changes
+
+Applies to: `app/models/`, `app/schemas/`, `migrations/`
+
+→ Update `docs/SCHEMA.md` with new/changed tables, columns, types, and constraints.
+
+## Architecture changes
+
+Applies to: providers, routes, jobs, webhooks, CLI, config, normalizers, `app/explore.py`
+
+→ Update `docs/ARCHITECTURE.md`. Also update `README.md` if user-facing commands or setup steps change.
+
+## ML pipeline changes
+
+Applies to: `hr_selection/` (features, priors, models, training, evaluation, synthetic data, config)
+
+→ Update `docs/ML_SYSTEM.md`.
+
+## Provider normalizer changes
+
+Applies to: `app/providers/*/normalizer.py`
+
+→ Update that provider's `MAPPING.md` with field-level mapping changes.
+
+## Checklist before finishing
+
+- [ ] Every new table or column is reflected in `docs/SCHEMA.md`
+- [ ] Every new provider, route, or job is reflected in `docs/ARCHITECTURE.md`
+- [ ] Every new ML feature, model, or dataset is reflected in `docs/ML_SYSTEM.md`
+- [ ] Provider field mappings are reflected in the relevant `MAPPING.md`

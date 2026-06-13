@@ -1,6 +1,19 @@
 import pytest
 
 
+@pytest.fixture(scope="session")
+def hr_synthetic_root(tmp_path_factory):
+    """Generate the three synthetic HR datasets once into a temp dir.
+
+    Returns the root containing ``bigideas/``, ``galaxyppg/``, ``ppg_dalia/``.
+    """
+    from hr_selection.synthetic import generate_all
+
+    root = tmp_path_factory.mktemp("hr_raw")
+    generate_all(root=root)
+    return root
+
+
 @pytest.fixture(autouse=True)
 def _env_setup(monkeypatch):
     """Set test environment variables."""

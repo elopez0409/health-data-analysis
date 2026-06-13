@@ -35,16 +35,36 @@ analysis = [
     "scipy>=1.14.0",
     "matplotlib>=3.9.0",
 ]
+ml = [
+    "scikit-learn>=1.3.0",
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+]
+# Optional gradient-boosting backend (behind --backend lightgbm). Kept separate
+# because it needs libomp on macOS and is not required for the default path.
+ml-lightgbm = [
+    "lightgbm>=4.3.0",
+]
+deep = [
+    "torch>=2.2.0",
+]
+# Cloud GPU training / hyperparameter sweeps via Modal (modal.com). Only needed
+# on the machine that launches jobs; the remote image is built from this same
+# project (see scripts/modal_train.py).
+cloud = [
+    "modal>=0.64.0",
+]
 
 [project.scripts]
 app-cli = "app.cli:cli_app"
+hr-train = "hr_selection.train:_cli_entrypoint"
 
 [build-system]
 requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["app*"]
+include = ["app*", "hr_selection*"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

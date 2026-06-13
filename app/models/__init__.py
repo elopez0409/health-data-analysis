@@ -24,6 +24,7 @@ from app.models.unified import (
     UnifiedDailyMetrics,
     UnifiedBodyMetrics,
 )
+from app.models.personal import PersonalHrState, HrAnomaly
 
 __all__ = [
     "Base",
@@ -48,4 +49,6 @@ __all__ = [
     "UnifiedHeartRate",
     "UnifiedDailyMetrics",
     "UnifiedBodyMetrics",
+    "PersonalHrState",
+    "HrAnomaly",
 ]

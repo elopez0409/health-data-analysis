@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime, timezone
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 
 from app.config import settings
@@ -38,6 +39,15 @@ def setup_scheduler() -> None:
         replace_existing=True,
     )
 
+    # Personal HR living model: nightly at 02:00 UTC
+    scheduler.add_job(
+        _run_personal_hr,
+        trigger=CronTrigger(hour=2, minute=0),
+        id="personal_hr",
+        kwargs={"user_id": user_id},
+        replace_existing=True,
+    )
+
     logger.info("scheduler_configured", jobs=len(scheduler.get_jobs()))
 
 
@@ -65,6 +75,16 @@ async def _run_fitbit_pull(user_id: uuid.UUID) -> None:
         logger.info("scheduled_fitbit_pull_done", count=count)
     except Exception as e:
         logger.error("scheduled_fitbit_pull_failed", error=str(e))
+
+
+async def _run_personal_hr(user_id: uuid.UUID) -> None:
+    from app.jobs.personal_hr import personal_hr_job
+
+    try:
+        summary = await personal_hr_job(user_id)
+        logger.info("scheduled_personal_hr_done", **summary)
+    except Exception as e:
+        logger.error("scheduled_personal_hr_failed", error=str(e))
 
 
 def start_scheduler() -> None:

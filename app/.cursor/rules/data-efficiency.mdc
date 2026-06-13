@@ -1,0 +1,53 @@
+---
+description: Polars and SQL push-down for efficient data access
+alwaysApply: false
+---
+
+# Data Efficiency
+
+Use Polars for data loading and analysis. Push work into SQL rather than in-memory post-processing.
+
+## Polars first
+
+This project uses Polars in `app/explore.py` and notebooks. Follow that pattern:
+
+```python
+# GOOD — direct SQL read via connectorx (fastest for notebooks)
+df = pl.read_database_uri("SELECT * FROM unified_heart_rate WHERE user_id = '...'", uri=conn)
+
+# GOOD — filtered load via explore helpers
+df = await load_unified("heart_rate", since=date(2025, 1, 1))
+```
+
+## Push work into SQL
+
+Filter, aggregate, and time-bucket in the query — not in Python after loading:
+
+```python
+# BAD — load everything, filter in memory
+df = pl.read_database_uri("SELECT * FROM unified_heart_rate", uri=conn)
+df = df.filter(pl.col("recorded_at") >= start)
+
+# GOOD — filter in SQL
+df = pl.read_database_uri(
+    "SELECT * FROM unified_heart_rate WHERE recorded_at >= $1 AND user_id = $2",
+    uri=conn,
+)
+```
+
+Use TimescaleDB time-bucketing (`time_bucket`) for aggregations on `unified_heart_rate`.
+
+## Lazy evaluation for large datasets
+
+Prefer `pl.scan_*` / `LazyFrame` when the full dataset does not fit in memory:
+
+```python
+lf = pl.scan_database_uri("SELECT recorded_at, bpm FROM unified_heart_rate", uri=conn)
+result = lf.filter(pl.col("bpm") > 100).group_by("bpm").agg(pl.len()).collect()
+```
+
+## Avoid unnecessary materialization
+
+- Do not convert Polars → pandas unless interfacing with a library that requires it.
+- Select only needed columns in SQL rather than `SELECT *` when possible.
+- Use date-range filters in `load_unified()` to limit data transfer.

@@ -1,0 +1,41 @@
+---
+description: Vectorized ML code — no row loops, batch APIs only
+alwaysApply: false
+---
+
+# ML Efficiency
+
+This package uses pandas/numpy/sklearn. Keep all operations vectorized.
+
+## No row-level Python loops
+
+```python
+# BAD — iterrows / per-row apply
+for _, row in df.iterrows():
+    scores[i] = compute(row["hr"])
+df["score"] = df.apply(lambda r: compute(r["hr"]), axis=1)
+
+# GOOD — whole-column/array operations
+scores = compute_vectorized(df["hr"].to_numpy())
+df["score"] = scores
+```
+
+Avoid `.iterrows()`, `.itertuples()` with per-row logic, and `.apply()` with Python lambdas. Use numpy broadcasting, pandas vectorized methods, or sklearn batch APIs.
+
+## Feature engineering
+
+- Operate on whole arrays/columns, not per-window or per-sample loops where vectorization is possible.
+- Use `groupby().transform()` for within-group operations (see `_add_rolling_std` in `features/build.py`).
+- Signal quality functions in `features/signal_quality.py` take full numpy arrays — keep this pattern.
+
+## Model code
+
+- Use sklearn batch APIs (`fit`, `predict_proba`) on full matrices.
+- Cross-validation via `GroupKFold.split()` — never manually split by iterating subjects.
+- For priors, prefer pre-computed columns over per-row lookup when building feature tables.
+
+## System-wide thinking
+
+- Push filtering and aggregation into SQL (via `app/explore.py`) rather than loading entire tables into memory.
+- Avoid materializing intermediate DataFrame copies — chain operations or use in-place where safe.
+- Window building over sessions is acceptable (inherently sequential per subject), but per-window feature math must stay vectorized within each batch.

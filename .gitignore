@@ -17,3 +17,6 @@ venv/
 data/subset/
 data/raw/
 data/normalized/
+data/hr_raw/
+data/hr_real/
+data/hr_out/
