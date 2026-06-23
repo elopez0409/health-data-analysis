@@ -16,6 +16,7 @@ from app.models.raw import (
     RawWhoopWorkout,
     RawGarminActivity,
     RawGarminSleep,
+    RawCatapultActivity,
 )
 from app.models.unified import (
     UnifiedActivity,
@@ -25,6 +26,7 @@ from app.models.unified import (
     UnifiedBodyMetrics,
 )
 from app.models.personal import PersonalHrState, HrAnomaly
+from app.models.team import Athlete
 
 __all__ = [
     "Base",
@@ -44,6 +46,7 @@ __all__ = [
     "RawWhoopWorkout",
     "RawGarminActivity",
     "RawGarminSleep",
+    "RawCatapultActivity",
     "UnifiedActivity",
     "UnifiedSleep",
     "UnifiedHeartRate",
@@ -51,4 +54,5 @@ __all__ = [
     "UnifiedBodyMetrics",
     "PersonalHrState",
     "HrAnomaly",
+    "Athlete",
 ]

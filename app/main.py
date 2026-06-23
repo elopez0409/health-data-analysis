@@ -20,10 +20,12 @@ app = FastAPI(title="Health Data Backend", version="0.1.0", lifespan=lifespan)
 from app.routes.oauth_callback import router as oauth_router
 from app.routes.ingest import router as ingest_router
 from app.webhooks.garmin import router as garmin_webhook_router
+from app.routes.team import router as team_router
 
 app.include_router(oauth_router)
 app.include_router(ingest_router)
 app.include_router(garmin_webhook_router)
+app.include_router(team_router)
 
 
 @app.get("/health")
